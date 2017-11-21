@@ -22,7 +22,19 @@ public class Services extends HttpServlet {
 		if (action != null)
 			switch (action) {
 			case "create":
-				Scheduler s = new Scheduler(Scheduler.LOOP_ON_DELAY, Scheduler.READ_CSV, 7200000, "USER_1");
+				Scheduler s = null;
+				switch (request.getParameter("mode")) {
+				case "truncate":
+					s = new Scheduler(Scheduler.ONE_SHOT, Scheduler.TRUNCATE_DATA, 7200000, "USER_1");
+					break;
+				case "append":
+					s = new Scheduler(Scheduler.LOOP_ON_DELAY, Scheduler.APPEND_DATA, 7200000, "USER_1");
+					break;
+				case "update":
+					s = new Scheduler(Scheduler.LOOP_ON_DELAY, Scheduler.UPDATE_DATA, 7200000, "USER_1");
+					break;
+				}
+
 				s.start();
 				schedulersList.add(s);
 				String msgCreate = "Scheduler " + s.getUniqueID() + " has been started.";

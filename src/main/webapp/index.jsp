@@ -21,8 +21,15 @@
 			<tbody>
 				<tr>
 					<td>Starta a new Scheduler</td>
-					<td><input type="button" value="Start"
-						onclick="start_new_scheduler();" /></td>
+					<td>
+						<table>
+							<tr>
+								<td><input type="button" value="Truncate" onclick="start_new_scheduler();" /></td>
+								<td><input type="button" value="Append" onclick="start_new_scheduler();" /></td>
+								<td><input type="button" value="Update" onclick="start_new_scheduler();" /></td>
+							</tr>
+						</table>
+					</td>
 				</tr>
 				<tr>
 					<td>Stops an existing Scheduler</td>

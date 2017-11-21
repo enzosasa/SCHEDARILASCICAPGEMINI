@@ -77,7 +77,11 @@ public class Util {
 					lastUpdatedFile.getName().length() - ".txt".length()));
 			if (currentFileDate.before(sdf.parse(sdf.format(today.getTime()))))
 				return "log" + sdf.format(today.getTime()) + ".txt";
-			if (lastUpdatedFile.length() > MAX_LOG_SIZE) {
+			if (lastUpdatedFile.length() >= MAX_LOG_SIZE) {
+				if (lastUpdatedFile.getName().contains("_"))
+					logCounter = Integer
+							.parseInt(lastUpdatedFile.getName().substring(lastUpdatedFile.getName().indexOf("_") + 1,
+									lastUpdatedFile.getName().length() - ".txt".length()));
 				logCounter++;
 				return "log" + sdf.format(today.getTime()) + "_" + logCounter + ".txt";
 			}

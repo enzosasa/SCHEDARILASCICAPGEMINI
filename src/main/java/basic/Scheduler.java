@@ -7,21 +7,33 @@ import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
 import entities.Csv;
+import entities.LinkedItem;
+import entities.LinkedItemId;
+import entities.Project;
+import entities.Release;
+import entities.ReleaseHistory;
+import entities.ReleaseIt;
+import entities.ReleaseitHistory;
+import entities.Status;
+import entities.User;
 
 public class Scheduler extends Thread {
 	public final static int LOOP_ON_DELAY = 0, LOOP_CERTAIN_TIME = 1, ONE_SHOT = 2;
-	public final static int IDLE = -1, READ_CSV = 1, ARRANGE_DATA = 2;
+	public final static int TRUNCATE_DATA = -1, APPEND_DATA = 1, UPDATE_DATA = 2, ARRANGE_DATA = 3;
 
 	private GregorianCalendar start;
 	private long time;
@@ -44,6 +56,9 @@ public class Scheduler extends Thread {
 		uniqueID = System.currentTimeMillis() + user;
 	}
 
+	/**
+	 * Scheduler's run mode.
+	 */
 	@Override
 	public void run() {
 		if (status)
@@ -79,26 +94,38 @@ public class Scheduler extends Thread {
 	}
 
 	/**
-	 * This is the scheduled method. Update content to do your stuffs.
+	 * This is the scheduled method. It switches on selected operation.
 	 */
 	private synchronized void performOperations() {
 		try {
 			switch (operationStatus) {
-			case IDLE:
+			case TRUNCATE_DATA:
+				HibernateUtil.rawQuery("TRUNCATE csv;");
 				if (DEBUG) {
-					HibernateUtil.rawQuery("TRUNCATE csv;");
+					Util.writeLog(toString());
 					Logger.getLogger(Scheduler.class.getName()).log(Level.INFO, toString());
 				}
 				return;
-			case READ_CSV:
-				readCsv();
-				if (DEBUG)
+			case APPEND_DATA:
+				appendData();
+				if (DEBUG) {
+					Util.writeLog(toString());
 					Logger.getLogger(Scheduler.class.getName()).log(Level.INFO, toString());
+				}
+				break;
+			case UPDATE_DATA:
+				// TODO updateData();
+				if (DEBUG) {
+					Util.writeLog(toString());
+					Logger.getLogger(Scheduler.class.getName()).log(Level.INFO, toString());
+				}
 				break;
 			case ARRANGE_DATA:
 				arrangeData();
-				if (DEBUG)
+				if (DEBUG) {
+					Util.writeLog(toString());
 					Logger.getLogger(Scheduler.class.getName()).log(Level.INFO, toString());
+				}
 				break;
 			}
 		} catch (Exception e) {
@@ -107,12 +134,9 @@ public class Scheduler extends Thread {
 	}
 
 	/**
-	 * It reads csv file with most recently latest modified date and inserts
-	 * datas in to remote csv table
-	 * 
-	 * complexity: T(n)= Ω( c + (n*m - 3n)) ~ T(n) = O(n^2)
+	 * It reads csv file with most recently latest modified date
 	 */
-	private void readCsv() {
+	private synchronized File readCsvFile() {
 		try {
 			File lastUpdatedFile = null, directory = new File(rb.getString("file.path"));
 			File[] filesList = directory.listFiles(new FileFilter() {
@@ -130,13 +154,26 @@ public class Scheduler extends Thread {
 				if (new Date(lastUpdatedFile.lastModified()).before(new Date(f.lastModified())))
 					lastUpdatedFile = f;
 			}
-			if (lastUpdatedFile == null) {
-				NullPointerException ex = new NullPointerException();
-				Logger.getLogger(Scheduler.class.getName()).log(Level.SEVERE,
-						"No csv file in folder " + rb.getString("file.path"), ex);
-				throw ex;
-			}
+			if (lastUpdatedFile == null)
+				throw new NullPointerException("No csv file in folder " + rb.getString("file.path"));
 
+			return lastUpdatedFile;
+		} catch (Exception e) {
+			if (Util.DEBUG)
+				Util.writeLog("readCsvFile()", e);
+			Logger.getLogger(Scheduler.class.getName()).log(Level.SEVERE, null, e);
+		}
+		return null;
+	}
+
+	/**
+	 * It appends data in to csv table.
+	 * 
+	 * complexity: T(n)= Ω( c + (n*m - 3n)) ~ T(n) = O(n^2)
+	 */
+	private void appendData() {
+		try {
+			File lastUpdatedFile = readCsvFile();
 			SimpleDateFormat sdfConverter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 			basic.State currentState = new basic.State();
 			Csv csvToFill = new Csv();
@@ -158,7 +195,7 @@ public class Scheduler extends Thread {
 
 			/*
 			 * Caratteri da rimuovere dovuti a codifica errata durante la
-			 * generazione del csv
+			 * generazione del file csv
 			 */
 			String regex = "[ยงÂ§]";
 
@@ -411,9 +448,13 @@ public class Scheduler extends Thread {
 							if (done) {
 								csvToFill = new Csv();
 								currentState = new basic.State();
-							} else
+							} else {
+								if (Util.DEBUG)
+									Util.writeLog("Impossible to persist created object csv: " + csvToFill.toString(),
+											new IllegalStateException());
 								throw new IllegalStateException(
 										"Impossible to persist created object csv: " + csvToFill.toString());
+							}
 						}
 						break;
 					} // switch
@@ -421,6 +462,8 @@ public class Scheduler extends Thread {
 			} // for
 			Logger.getLogger(Scheduler.class.getName()).log(Level.INFO, toString());
 		} catch (Exception e) {
+			if (Util.DEBUG)
+				Util.writeLog("appendData()", e);
 			Logger.getLogger(Scheduler.class.getName()).log(Level.SEVERE, null, e);
 		}
 	}
@@ -430,7 +473,279 @@ public class Scheduler extends Thread {
 	 */
 	private void arrangeData() {
 		try {
-			// TODO Auto-generated method stub
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+			List<Csv> list = HibernateUtil.readAllCsv();
+			for (Csv csv : list) {
+				// Se non esiste il progetto lo creo
+				Project pForName = HibernateUtil.readProjectForName(csv.getProgettoPolarion());
+				if (pForName == null) {
+					pForName = new Project();
+					pForName.setNome(csv.getProgettoPolarion());
+					HibernateUtil.save(pForName);
+				}
+				Release releaseDiProgetto = null;
+				if (csv.getColonnaB() != null && csv.getColonnaB().length() > 0) {
+					/*
+					 * ColonnaB
+					 * 
+					 * idReleaseDiProgetto; titleReleaseDiProgetto;
+					 * priorityReleaseDiProgetto; severityReleaseDiProgetto;
+					 * progettoPolarion; versione; link; release;
+					 * dataCreazioneReleaseDiProgetto;
+					 * dataUltimoAggiornamentoReleaseDP
+					 */
+					String[] bElements = csv.getColonnaB().split(";");
+					releaseDiProgetto = HibernateUtil.readRelease(bElements[0].trim());
+					boolean toUpdate = false, toSave = false;
+
+					if (releaseDiProgetto == null) {
+						releaseDiProgetto = new Release();
+						releaseDiProgetto.setIdPolarion(bElements[0].trim());
+						toSave = true;
+					}
+					if (releaseDiProgetto.getTitolo() == null
+							|| !releaseDiProgetto.getTitolo().equals(bElements[1].trim())) {
+						releaseDiProgetto.setTitolo(bElements[1].trim());
+						if (!toSave)
+							toUpdate = true;
+					}
+					if (bElements[2] != null && bElements[2].trim().length() > 0) {
+						if (!toSave && releaseDiProgetto.getPriority() != null
+								&& releaseDiProgetto.getPriority().getValore() != Float.parseFloat(bElements[2].trim()))
+							toUpdate = true;
+						if (toSave || toUpdate)
+							releaseDiProgetto
+									.setPriority(HibernateUtil.readPriority(Float.parseFloat(bElements[2].trim())));
+					}
+					if (bElements[3] != null && bElements[3].trim().length() > 0) {
+						if (!toSave && releaseDiProgetto.getSeverity() != null
+								&& !releaseDiProgetto.getSeverity().getNome().equals(bElements[3].trim()))
+							toUpdate = true;
+						if (toSave || toUpdate)
+							releaseDiProgetto.setSeverity(HibernateUtil.readSeverity(bElements[3].trim()));
+					}
+					releaseDiProgetto.setProject(pForName);
+					if (bElements[5] != null && bElements[5].trim().length() > 0) {
+						if (!toSave && releaseDiProgetto.getVersione() != null
+								&& !releaseDiProgetto.getVersione().equals(bElements[5].trim()))
+							toUpdate = true;
+						releaseDiProgetto.setVersione(bElements[5].trim());
+					}
+					if (bElements[6] != null && bElements[6].trim().length() > 0) {
+						if (!toSave && releaseDiProgetto.getLink() != null
+								&& !releaseDiProgetto.getLink().equals(bElements[6].trim()))
+							toUpdate = true;
+						releaseDiProgetto.setLink(bElements[6].trim());
+					}
+					if (bElements[7] != null && bElements[7].trim().length() > 0) {
+						if (!toSave && releaseDiProgetto.getType() != null
+								&& !releaseDiProgetto.getType().equals(bElements[6].trim()))
+							toUpdate = true;
+						releaseDiProgetto.setType(bElements[7].trim());
+					}
+					if (bElements[8] != null && bElements[8].trim().length() > 0) {
+						Date dataCreazione = sdf.parse(bElements[8].trim());
+						if (!toSave && releaseDiProgetto.getDataCreazione() != null
+								&& !releaseDiProgetto.getDataCreazione().equals(dataCreazione))
+							toUpdate = true;
+						releaseDiProgetto.setDataCreazione(dataCreazione);
+					}
+					if (bElements[9] != null && bElements[9].trim().length() > 0) {
+						Date dataUltimoAggiornamento = sdf.parse(bElements[9].trim());
+						if (!toSave && releaseDiProgetto.getDataUpdate() != null
+								&& !releaseDiProgetto.getDataUpdate().equals(dataUltimoAggiornamento))
+							toUpdate = true;
+						releaseDiProgetto.setDataUpdate(dataUltimoAggiornamento);
+					}
+					if (toSave)
+						HibernateUtil.save(releaseDiProgetto);
+					else if (toUpdate)
+						HibernateUtil.update(Release.class, releaseDiProgetto);
+
+				}
+				if (csv.getColonnaC() != null && csv.getColonnaC().length() > 0) {
+					/*
+					 * ColonnaC
+					 * 
+					 * progettoRelease
+					 */
+					String regex = Pattern.quote("(") + "(.*?)" + Pattern.quote(")");
+					Pattern pattern = Pattern.compile(regex);
+					Matcher matcher = pattern.matcher(csv.getColonnaC());
+					while (matcher.find()) {
+						String[] history = matcher.group().split("^");
+						Status status = HibernateUtil.readStatus(history[0].trim());
+						Date dataUpdate = sdf.parse(history[1]);
+						User user = HibernateUtil.readUser(history[2].trim());
+						ReleaseHistory rHistory = HibernateUtil.readReleaseHistory(releaseDiProgetto, status,
+								dataUpdate, user);
+						if (rHistory == null) {
+							rHistory = new ReleaseHistory();
+							rHistory.setRelease(releaseDiProgetto);
+							rHistory.setStatus(status);
+							rHistory.setDataUpdate(dataUpdate);
+							rHistory.setUser(user);
+							HibernateUtil.save(rHistory);
+						}
+					}
+				}
+				if (csv.getColonnaD() != null && csv.getColonnaD().length() > 0) {
+					// TODO D
+					/*
+					 * ColonnaD
+					 * 
+					 * progettoSviluppo
+					 */
+				}
+				if (csv.getColonnaE() != null && csv.getColonnaE().length() > 0) {
+					// TODO E
+					/*
+					 * ColonnaE
+					 * 
+					 * progettoMev
+					 */
+				}
+				if (csv.getColonnaF() != null && csv.getColonnaF().length() > 0) {
+					// TODO F
+					/*
+					 * ColonnaF
+					 * 
+					 * progettoDocumento
+					 */
+				}
+				if (csv.getColonnaG() != null && csv.getColonnaG().length() > 0) {
+					// TODO G
+					/*
+					 * ColonnaG
+					 * 
+					 * progettoRds
+					 */
+				}
+				if (csv.getColonnaH() != null && csv.getColonnaH().length() > 0) {
+					// TODO H
+					/*
+					 * ColonnaH
+					 * 
+					 * progettoDefect
+					 */
+				}
+				if (csv.getColonnaI() != null && csv.getColonnaI().length() > 0) {
+					// TODO I
+					/*
+					 * ColonnaI
+					 * 
+					 * progettoAnomalia
+					 */
+				}
+				ReleaseIt releaseIT = null;
+				if (csv.getColonnaJ() != null && csv.getColonnaJ().length() > 0) {
+					/*
+					 * ColonnaJ
+					 * 
+					 * progettoReleaseIt
+					 */
+					boolean hasLinkedItem = false;
+					if (csv.getColonnaJ().startsWith("<") && csv.getColonnaJ().endsWith(">")) {
+						csv.setColonnaJ(csv.getColonnaJ().substring(1, csv.getColonnaJ().length() - 1));
+						hasLinkedItem = true;
+					}
+					String[] elements = csv.getColonnaJ().split("|");
+					if (hasLinkedItem) {
+						LinkedItemId lIId = new LinkedItemId();
+						lIId.setIdPolarionPadre(elements[1]);
+						lIId.setIdPolarionFiglio(releaseDiProgetto.getIdPolarion());
+						LinkedItem li = HibernateUtil.readLinkedItem(lIId);
+						if (li == null) {
+							li = new LinkedItem();
+							li.setId(lIId);
+							HibernateUtil.save(li);
+						}
+					}
+					releaseIT = HibernateUtil.readReleaseIT(elements[1]);
+					boolean toSave = false;
+					if (releaseIT == null || !releaseIT.getTitolo().equals(elements[2].trim())) {
+						if (releaseIT == null) {
+							releaseIT = new ReleaseIt();
+							toSave = true;
+						}
+						releaseIT.setTitolo(elements[2].trim());
+						if (elements[3] != null && elements[3].trim().length() > 0)
+							releaseIT.setDataInizio(sdf.parse(elements[3].trim()));
+						if (elements[4] != null && elements[4].trim().length() > 0)
+							releaseIT.setDataFine(sdf.parse(elements[4].trim()));
+						if (toSave)
+							HibernateUtil.save(releaseIT);
+						else
+							HibernateUtil.update(ReleaseIt.class, releaseIT);
+					}
+					if (elements.length > 5 && elements[5] != null && elements[5].trim().length() > 0) {
+						String regex = Pattern.quote("(") + "(.*?)" + Pattern.quote(")");
+						Pattern pattern = Pattern.compile(regex);
+						Matcher matcher = pattern.matcher(elements[5].trim());
+						boolean isFirstRow = true;
+						// formato sdf per Thu Feb 18 00:00:00 CET 2016
+						SimpleDateFormat literalSdf = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+						while (matcher.find()) {
+							String[] history = matcher.group().split("^");
+							Status status = HibernateUtil.readStatus(history[0].trim());
+
+							Date dataUpdate = literalSdf.parse(history[1]);
+
+							if (isFirstRow && releaseIT.getDataCreazione() == null) {
+								releaseIT.setDataCreazione(dataUpdate);
+								HibernateUtil.update(ReleaseIt.class, releaseIT);
+								isFirstRow = false;
+							}
+
+							ReleaseitHistory rItHistory = null;
+							if (history.length > 2) {
+								User user = HibernateUtil.readUser(history[2].trim());
+								rItHistory = HibernateUtil.readReleaseItHistory(releaseDiProgetto, status, dataUpdate,
+										user);
+							}
+							if (rItHistory == null) {
+								rItHistory = new ReleaseitHistory();
+								rItHistory.setReleaseIt(releaseIT);
+								rItHistory.setStatus(status);
+								rItHistory.setDataUpdate(dataUpdate);
+								HibernateUtil.save(rItHistory);
+							}
+						}
+					}
+				}
+				if (csv.getColonnaK() != null && csv.getColonnaK().length() > 0) {
+					// TODO K
+					/*
+					 * ColonnaK
+					 * 
+					 * taskInfo
+					 */
+				}
+				if (csv.getColonnaL() != null && csv.getColonnaL().length() > 0) {
+					// TODO L
+					/*
+					 * ColonnaL
+					 * 
+					 * workRecordInfo
+					 */
+				}
+				if (csv.getColonnaM() != null && csv.getColonnaM().length() > 0) {
+					// TODO M
+					/*
+					 * ColonnaM
+					 * 
+					 * infoTestcase
+					 */
+				}
+				if (csv.getColonnaN() != null && csv.getColonnaN().length() > 0) {
+					// TODO N
+					/*
+					 * ColonnaN
+					 * 
+					 * infoChecklist
+					 */
+				}
+			}
 		} catch (Exception e) {
 			Logger.getLogger(Scheduler.class.getName()).log(Level.SEVERE, null, e);
 		}
@@ -478,24 +793,27 @@ public class Scheduler extends Thread {
 
 		switch (mode) {
 		case LOOP_ON_DELAY:
-			sb.append("Current Mode: LOOP ON DELAY\n");
+			sb.append("Current Execution Mode: LOOP ON DELAY\n");
 			sb.append("Delay time: " + time + "ms\n");
 			break;
 		case LOOP_CERTAIN_TIME:
-			sb.append("Current Mode: LOOP CERTAIN TIME\n");
+			sb.append("Current Execution Mode: LOOP CERTAIN TIME\n");
 			sb.append("Delay time: [24h]\n");
 			sb.append("Actoions performing time: " + sdf.format(time) + " \n");
 			break;
 		case ONE_SHOT:
-			sb.append("Current Mode: ONE SHOT\n");
+			sb.append("Current Execution Mode: ONE SHOT\n");
 			break;
 		}
 		switch (operationStatus) {
-		case IDLE:
-			sb.append("Current Operation Type: IDLE\n");
+		case TRUNCATE_DATA:
+			sb.append("Current Operation Type: TRUNCATE_DATA\n");
 			break;
-		case READ_CSV:
-			sb.append("Current Operation Type: READ_CSV\n");
+		case APPEND_DATA:
+			sb.append("Current Operation Type: APPEND_DATA\n");
+			break;
+		case UPDATE_DATA:
+			sb.append("Current Operation Type: UPDATE_DATA\n");
 			break;
 		case ARRANGE_DATA:
 			sb.append("Current Operation Type: ARRANGE_DATA\n");
