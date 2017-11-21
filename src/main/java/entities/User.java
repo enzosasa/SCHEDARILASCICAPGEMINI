@@ -1,5 +1,5 @@
 package entities;
-// Generated Oct 25, 2017 9:10:32 AM by Hibernate Tools 5.1.0.Alpha1
+// Generated Nov 20, 2017 1:22:37 AM by Hibernate Tools 5.1.0.Alpha1
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,11 +30,9 @@ public class User implements java.io.Serializable {
 	private Set<SupportHistory> supportHistories = new HashSet<SupportHistory>(0);
 	private Set<ChecklistTestcase> checklistTestcases = new HashSet<ChecklistTestcase>(0);
 	private Set<DefectHistory> defectHistories = new HashSet<DefectHistory>(0);
-	private Set<ReleaseIt> releaseIts = new HashSet<ReleaseIt>(0);
 	private Set<ProgettoSviluppo> progettoSviluppos = new HashSet<ProgettoSviluppo>(0);
 	private Set<ReleaseHistory> releaseHistories = new HashSet<ReleaseHistory>(0);
 	private Set<ReleaseitHistory> releaseitHistories = new HashSet<ReleaseitHistory>(0);
-	private Set<Release> releases = new HashSet<Release>(0);
 	private Set<Testcase> testcases = new HashSet<Testcase>(0);
 	private Set<Documento> documentos = new HashSet<Documento>(0);
 	private Set<TestcaseWorkitem> testcaseWorkitems = new HashSet<TestcaseWorkitem>(0);
@@ -51,11 +49,11 @@ public class User implements java.io.Serializable {
 	public User(String nome, String idPolarion, Set<Support> supports, Set<TaskItHistory> taskItHistories,
 			Set<Taskit> taskits, Set<Defect> defects, Set<TaskitWorkitem> taskitWorkitems,
 			Set<SupportHistory> supportHistories, Set<ChecklistTestcase> checklistTestcases,
-			Set<DefectHistory> defectHistories, Set<ReleaseIt> releaseIts, Set<ProgettoSviluppo> progettoSviluppos,
-			Set<ReleaseHistory> releaseHistories, Set<ReleaseitHistory> releaseitHistories, Set<Release> releases,
-			Set<Testcase> testcases, Set<Documento> documentos, Set<TestcaseWorkitem> testcaseWorkitems, Set<Mev> mevs,
-			Set<Task> tasks, Set<AnomaliaAssistenza> anomaliaAssistenzas, Set<Anomalia> anomalias,
-			Set<Assignee> assignees, Set<TaskHistory> taskHistories) {
+			Set<DefectHistory> defectHistories, Set<ProgettoSviluppo> progettoSviluppos,
+			Set<ReleaseHistory> releaseHistories, Set<ReleaseitHistory> releaseitHistories, Set<Testcase> testcases,
+			Set<Documento> documentos, Set<TestcaseWorkitem> testcaseWorkitems, Set<Mev> mevs, Set<Task> tasks,
+			Set<AnomaliaAssistenza> anomaliaAssistenzas, Set<Anomalia> anomalias, Set<Assignee> assignees,
+			Set<TaskHistory> taskHistories) {
 		this.nome = nome;
 		this.idPolarion = idPolarion;
 		this.supports = supports;
@@ -66,11 +64,9 @@ public class User implements java.io.Serializable {
 		this.supportHistories = supportHistories;
 		this.checklistTestcases = checklistTestcases;
 		this.defectHistories = defectHistories;
-		this.releaseIts = releaseIts;
 		this.progettoSviluppos = progettoSviluppos;
 		this.releaseHistories = releaseHistories;
 		this.releaseitHistories = releaseitHistories;
-		this.releases = releases;
 		this.testcases = testcases;
 		this.documentos = documentos;
 		this.testcaseWorkitems = testcaseWorkitems;
@@ -185,15 +181,6 @@ public class User implements java.io.Serializable {
 	}
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-	public Set<ReleaseIt> getReleaseIts() {
-		return this.releaseIts;
-	}
-
-	public void setReleaseIts(Set<ReleaseIt> releaseIts) {
-		this.releaseIts = releaseIts;
-	}
-
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
 	public Set<ProgettoSviluppo> getProgettoSviluppos() {
 		return this.progettoSviluppos;
 	}
@@ -218,15 +205,6 @@ public class User implements java.io.Serializable {
 
 	public void setReleaseitHistories(Set<ReleaseitHistory> releaseitHistories) {
 		this.releaseitHistories = releaseitHistories;
-	}
-
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-	public Set<Release> getReleases() {
-		return this.releases;
-	}
-
-	public void setReleases(Set<Release> releases) {
-		this.releases = releases;
 	}
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")

@@ -1,5 +1,5 @@
 package entities;
-// Generated Oct 25, 2017 9:10:32 AM by Hibernate Tools 5.1.0.Alpha1
+// Generated Nov 20, 2017 1:22:37 AM by Hibernate Tools 5.1.0.Alpha1
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,11 +28,9 @@ public class Status implements java.io.Serializable {
 	private Set<ReleaseitHistory> releaseitHistories = new HashSet<ReleaseitHistory>(0);
 	private Set<ProgettoSviluppo> progettoSviluppos = new HashSet<ProgettoSviluppo>(0);
 	private Set<DefectHistory> defectHistories = new HashSet<DefectHistory>(0);
-	private Set<ReleaseIt> releaseIts = new HashSet<ReleaseIt>(0);
 	private Set<Taskit> taskits = new HashSet<Taskit>(0);
 	private Set<Documento> documentos = new HashSet<Documento>(0);
 	private Set<Support> supports = new HashSet<Support>(0);
-	private Set<Release> releases = new HashSet<Release>(0);
 	private Set<Task> tasks = new HashSet<Task>(0);
 	private Set<Anomalia> anomalias = new HashSet<Anomalia>(0);
 	private Set<Defect> defects = new HashSet<Defect>(0);
@@ -46,9 +44,8 @@ public class Status implements java.io.Serializable {
 	public Status(String nome, String polarionName, Set<SupportHistory> supportHistories,
 			Set<TaskHistory> taskHistories, Set<ReleaseHistory> releaseHistories,
 			Set<ReleaseitHistory> releaseitHistories, Set<ProgettoSviluppo> progettoSviluppos,
-			Set<DefectHistory> defectHistories, Set<ReleaseIt> releaseIts, Set<Taskit> taskits,
-			Set<Documento> documentos, Set<Support> supports, Set<Release> releases, Set<Task> tasks,
-			Set<Anomalia> anomalias, Set<Defect> defects, Set<AnomaliaAssistenza> anomaliaAssistenzas,
+			Set<DefectHistory> defectHistories, Set<Taskit> taskits, Set<Documento> documentos, Set<Support> supports,
+			Set<Task> tasks, Set<Anomalia> anomalias, Set<Defect> defects, Set<AnomaliaAssistenza> anomaliaAssistenzas,
 			Set<Testcase> testcases, Set<Mev> mevs) {
 		this.nome = nome;
 		this.polarionName = polarionName;
@@ -58,11 +55,9 @@ public class Status implements java.io.Serializable {
 		this.releaseitHistories = releaseitHistories;
 		this.progettoSviluppos = progettoSviluppos;
 		this.defectHistories = defectHistories;
-		this.releaseIts = releaseIts;
 		this.taskits = taskits;
 		this.documentos = documentos;
 		this.supports = supports;
-		this.releases = releases;
 		this.tasks = tasks;
 		this.anomalias = anomalias;
 		this.defects = defects;
@@ -156,15 +151,6 @@ public class Status implements java.io.Serializable {
 	}
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "status")
-	public Set<ReleaseIt> getReleaseIts() {
-		return this.releaseIts;
-	}
-
-	public void setReleaseIts(Set<ReleaseIt> releaseIts) {
-		this.releaseIts = releaseIts;
-	}
-
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "status")
 	public Set<Taskit> getTaskits() {
 		return this.taskits;
 	}
@@ -189,15 +175,6 @@ public class Status implements java.io.Serializable {
 
 	public void setSupports(Set<Support> supports) {
 		this.supports = supports;
-	}
-
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "status")
-	public Set<Release> getReleases() {
-		return this.releases;
-	}
-
-	public void setReleases(Set<Release> releases) {
-		this.releases = releases;
 	}
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "status")

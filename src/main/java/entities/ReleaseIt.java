@@ -1,5 +1,5 @@
 package entities;
-// Generated Oct 25, 2017 9:10:32 AM by Hibernate Tools 5.1.0.Alpha1
+// Generated Nov 20, 2017 1:22:37 AM by Hibernate Tools 5.1.0.Alpha1
 
 import java.util.Date;
 import java.util.HashSet;
@@ -27,12 +27,9 @@ public class ReleaseIt implements java.io.Serializable {
 	private Integer id;
 	private Priority priority;
 	private Severity severity;
-	private Status status;
-	private User user;
 	private String idPolarion;
 	private String titolo;
 	private Date dataCreazione;
-	private Date dataUpdate;
 	private Date dataInizio;
 	private Date dataFine;
 	private Set<Assignee> assignees = new HashSet<Assignee>(0);
@@ -41,21 +38,13 @@ public class ReleaseIt implements java.io.Serializable {
 	public ReleaseIt() {
 	}
 
-	public ReleaseIt(User user) {
-		this.user = user;
-	}
-
-	public ReleaseIt(Priority priority, Severity severity, Status status, User user, String idPolarion, String titolo,
-			Date dataCreazione, Date dataUpdate, Date dataInizio, Date dataFine, Set<Assignee> assignees,
-			Set<ReleaseitHistory> releaseitHistories) {
+	public ReleaseIt(Priority priority, Severity severity, String idPolarion, String titolo, Date dataCreazione,
+			Date dataInizio, Date dataFine, Set<Assignee> assignees, Set<ReleaseitHistory> releaseitHistories) {
 		this.priority = priority;
 		this.severity = severity;
-		this.status = status;
-		this.user = user;
 		this.idPolarion = idPolarion;
 		this.titolo = titolo;
 		this.dataCreazione = dataCreazione;
-		this.dataUpdate = dataUpdate;
 		this.dataInizio = dataInizio;
 		this.dataFine = dataFine;
 		this.assignees = assignees;
@@ -94,26 +83,6 @@ public class ReleaseIt implements java.io.Serializable {
 		this.severity = severity;
 	}
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "cod_status")
-	public Status getStatus() {
-		return this.status;
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "cod_author", nullable = false)
-	public User getUser() {
-		return this.user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
 	@Column(name = "id_polarion", length = 45)
 	public String getIdPolarion() {
 		return this.idPolarion;
@@ -143,17 +112,7 @@ public class ReleaseIt implements java.io.Serializable {
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "data_update", length = 19)
-	public Date getDataUpdate() {
-		return this.dataUpdate;
-	}
-
-	public void setDataUpdate(Date dataUpdate) {
-		this.dataUpdate = dataUpdate;
-	}
-
-	@Temporal(TemporalType.DATE)
-	@Column(name = "data_inizio", length = 10)
+	@Column(name = "data_inizio", length = 19)
 	public Date getDataInizio() {
 		return this.dataInizio;
 	}
@@ -162,8 +121,8 @@ public class ReleaseIt implements java.io.Serializable {
 		this.dataInizio = dataInizio;
 	}
 
-	@Temporal(TemporalType.DATE)
-	@Column(name = "data_fine", length = 10)
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "data_fine", length = 19)
 	public Date getDataFine() {
 		return this.dataFine;
 	}

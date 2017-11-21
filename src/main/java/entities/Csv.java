@@ -1,5 +1,5 @@
 package entities;
-// Generated Oct 25, 2017 9:10:32 AM by Hibernate Tools 5.1.0.Alpha1
+// Generated Nov 20, 2017 1:22:37 AM by Hibernate Tools 5.1.0.Alpha1
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,11 +19,6 @@ import javax.persistence.TemporalType;
 @Table(name = "csv", catalog = "rilasci_DB")
 public class Csv implements java.io.Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	
 	private Integer id;
 	private String fileName;
 	private Date fileDate;
@@ -99,7 +94,7 @@ public class Csv implements java.io.Serializable {
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "fileDate", length = 10)
+	@Column(name = "fileDate", length = 19)
 	public Date getFileDate() {
 		return this.fileDate;
 	}
@@ -109,7 +104,7 @@ public class Csv implements java.io.Serializable {
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "inizioEstrazione", length = 10)
+	@Column(name = "inizioEstrazione", length = 19)
 	public Date getInizioEstrazione() {
 		return this.inizioEstrazione;
 	}
@@ -119,7 +114,7 @@ public class Csv implements java.io.Serializable {
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "fineEstrazione", length = 10)
+	@Column(name = "fineEstrazione", length = 19)
 	public Date getFineEstrazione() {
 		return this.fineEstrazione;
 	}
@@ -137,7 +132,7 @@ public class Csv implements java.io.Serializable {
 		this.idPolarion = idPolarion;
 	}
 
-	@Column(name = "progettoPolarion", length = 65535)
+	@Column(name = "progettoPolarion", length = 16777215)
 	public String getProgettoPolarion() {
 		return this.progettoPolarion;
 	}
@@ -146,7 +141,7 @@ public class Csv implements java.io.Serializable {
 		this.progettoPolarion = progettoPolarion;
 	}
 
-	@Column(name = "repository", length = 65535)
+	@Column(name = "repository")
 	public String getRepository() {
 		return this.repository;
 	}
@@ -155,7 +150,7 @@ public class Csv implements java.io.Serializable {
 		this.repository = repository;
 	}
 
-	@Column(name = "colonnaA", length = 65535)
+	@Column(name = "colonnaA")
 	public String getColonnaA() {
 		return this.colonnaA;
 	}
@@ -164,7 +159,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaA = colonnaA;
 	}
 
-	@Column(name = "colonnaB", length = 65535)
+	@Column(name = "colonnaB")
 	public String getColonnaB() {
 		return this.colonnaB;
 	}
@@ -173,7 +168,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaB = colonnaB;
 	}
 
-	@Column(name = "colonnaC", length = 65535)
+	@Column(name = "colonnaC")
 	public String getColonnaC() {
 		return this.colonnaC;
 	}
@@ -182,7 +177,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaC = colonnaC;
 	}
 
-	@Column(name = "colonnaD", length = 65535)
+	@Column(name = "colonnaD")
 	public String getColonnaD() {
 		return this.colonnaD;
 	}
@@ -191,7 +186,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaD = colonnaD;
 	}
 
-	@Column(name = "colonnaE", length = 65535)
+	@Column(name = "colonnaE")
 	public String getColonnaE() {
 		return this.colonnaE;
 	}
@@ -200,7 +195,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaE = colonnaE;
 	}
 
-	@Column(name = "colonnaF", length = 65535)
+	@Column(name = "colonnaF")
 	public String getColonnaF() {
 		return this.colonnaF;
 	}
@@ -209,7 +204,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaF = colonnaF;
 	}
 
-	@Column(name = "colonnaG", length = 65535)
+	@Column(name = "colonnaG")
 	public String getColonnaG() {
 		return this.colonnaG;
 	}
@@ -218,7 +213,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaG = colonnaG;
 	}
 
-	@Column(name = "colonnaH", length = 65535)
+	@Column(name = "colonnaH")
 	public String getColonnaH() {
 		return this.colonnaH;
 	}
@@ -227,7 +222,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaH = colonnaH;
 	}
 
-	@Column(name = "colonnaI", length = 65535)
+	@Column(name = "colonnaI")
 	public String getColonnaI() {
 		return this.colonnaI;
 	}
@@ -236,7 +231,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaI = colonnaI;
 	}
 
-	@Column(name = "colonnaJ", length = 65535)
+	@Column(name = "colonnaJ")
 	public String getColonnaJ() {
 		return this.colonnaJ;
 	}
@@ -245,7 +240,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaJ = colonnaJ;
 	}
 
-	@Column(name = "colonnaK", length = 65535)
+	@Column(name = "colonnaK")
 	public String getColonnaK() {
 		return this.colonnaK;
 	}
@@ -254,7 +249,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaK = colonnaK;
 	}
 
-	@Column(name = "colonnaL", length = 65535)
+	@Column(name = "colonnaL")
 	public String getColonnaL() {
 		return this.colonnaL;
 	}
@@ -263,7 +258,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaL = colonnaL;
 	}
 
-	@Column(name = "colonnaM", length = 65535)
+	@Column(name = "colonnaM")
 	public String getColonnaM() {
 		return this.colonnaM;
 	}
@@ -272,7 +267,7 @@ public class Csv implements java.io.Serializable {
 		this.colonnaM = colonnaM;
 	}
 
-	@Column(name = "colonnaN", length = 65535)
+	@Column(name = "colonnaN")
 	public String getColonnaN() {
 		return this.colonnaN;
 	}
@@ -280,7 +275,7 @@ public class Csv implements java.io.Serializable {
 	public void setColonnaN(String colonnaN) {
 		this.colonnaN = colonnaN;
 	}
-
+	
 	@Override
 	public String toString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");

@@ -1,5 +1,5 @@
 package entities;
-// Generated Oct 25, 2017 9:10:32 AM by Hibernate Tools 5.1.0.Alpha1
+// Generated Nov 20, 2017 1:22:37 AM by Hibernate Tools 5.1.0.Alpha1
 
 import java.util.Date;
 import java.util.HashSet;
@@ -28,38 +28,32 @@ public class Release implements java.io.Serializable {
 	private Priority priority;
 	private Project project;
 	private Severity severity;
-	private Status status;
-	private User user;
 	private String idPolarion;
 	private String titolo;
 	private Date dataCreazione;
 	private Date dataUpdate;
 	private String versione;
 	private String link;
+	private String type;
 	private Set<Assignee> assignees = new HashSet<Assignee>(0);
 	private Set<ReleaseHistory> releaseHistories = new HashSet<ReleaseHistory>(0);
 
 	public Release() {
 	}
 
-	public Release(User user) {
-		this.user = user;
-	}
-
-	public Release(Priority priority, Project project, Severity severity, Status status, User user, String idPolarion,
-			String titolo, Date dataCreazione, Date dataUpdate, String versione, String link, Set<Assignee> assignees,
+	public Release(Priority priority, Project project, Severity severity, String idPolarion, String titolo,
+			Date dataCreazione, Date dataUpdate, String versione, String link, String type, Set<Assignee> assignees,
 			Set<ReleaseHistory> releaseHistories) {
 		this.priority = priority;
 		this.project = project;
 		this.severity = severity;
-		this.status = status;
-		this.user = user;
 		this.idPolarion = idPolarion;
 		this.titolo = titolo;
 		this.dataCreazione = dataCreazione;
 		this.dataUpdate = dataUpdate;
 		this.versione = versione;
 		this.link = link;
+		this.type = type;
 		this.assignees = assignees;
 		this.releaseHistories = releaseHistories;
 	}
@@ -104,26 +98,6 @@ public class Release implements java.io.Serializable {
 
 	public void setSeverity(Severity severity) {
 		this.severity = severity;
-	}
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "cod_status")
-	public Status getStatus() {
-		return this.status;
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "cod_author", nullable = false)
-	public User getUser() {
-		return this.user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
 	}
 
 	@Column(name = "id_polarion", length = 45)
@@ -180,6 +154,15 @@ public class Release implements java.io.Serializable {
 
 	public void setLink(String link) {
 		this.link = link;
+	}
+
+	@Column(name = "type", length = 45)
+	public String getType() {
+		return this.type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "releaseIt")
