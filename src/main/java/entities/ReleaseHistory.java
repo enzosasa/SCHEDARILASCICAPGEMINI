@@ -1,10 +1,13 @@
 package entities;
 // Generated Nov 20, 2017 1:22:37 AM by Hibernate Tools 5.1.0.Alpha1
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -20,7 +23,7 @@ import javax.persistence.UniqueConstraint;
 @Table(name = "release_history", catalog = "rilasci_DB", uniqueConstraints = @UniqueConstraint(columnNames = "cod_id_release"))
 public class ReleaseHistory implements java.io.Serializable {
 
-	private int id;
+	private Integer id;
 	private Release release;
 	private Status status;
 	private User user;
@@ -42,13 +45,14 @@ public class ReleaseHistory implements java.io.Serializable {
 	}
 
 	@Id
+	@GeneratedValue(strategy = IDENTITY)
 
 	@Column(name = "id", unique = true, nullable = false)
-	public int getId() {
+	public Integer getId() {
 		return this.id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
