@@ -17,12 +17,6 @@
 		<servlet-class>
 			org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
 	</servlet>
-	<servlet>
-		<servlet-name>Services</servlet-name>
-		<display-name>Services</display-name>
-		<description></description>
-		<servlet-class>servlets.Services</servlet-class>
-	</servlet>
 	<servlet-mapping>
 		<servlet-name>resteasy-servlet</servlet-name>
 		<url-pattern>/*</url-pattern>
