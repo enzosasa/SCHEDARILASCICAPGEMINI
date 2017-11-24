@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 public class Util {
 	public static boolean DEBUG = true;
-	private static final int MAX_LOG_SIZE = 2 * 1024 * 1024; // 2MB
+	private static final long MAX_LOG_SIZE = 2 * 1024 * 1024; // 2MB
 	private static int logCounter = 0;
 
 	private static ResourceBundle rb = ResourceBundle.getBundle("config");
@@ -52,7 +52,7 @@ public class Util {
 
 	private static String getLogName() {
 		GregorianCalendar today = new GregorianCalendar();
-		SimpleDateFormat sdf = new SimpleDateFormat("ddmmyyyy");
+		SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy");
 		try {
 			File directory = new File(rb.getString("logs.path"));
 			File lastUpdatedFile = null;
