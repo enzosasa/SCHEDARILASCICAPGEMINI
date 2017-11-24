@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
 import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -107,14 +109,14 @@ public class Scheduler extends Thread {
 				}
 				return;
 			case APPEND_DATA:
-				appendData();
+				parseData(false);
 				if (DEBUG) {
 					Util.writeLog(toString());
 					Logger.getLogger(Scheduler.class.getName()).log(Level.INFO, toString());
 				}
 				break;
 			case UPDATE_DATA:
-				// TODO updateData();
+				parseData(true);
 				if (DEBUG) {
 					Util.writeLog(toString());
 					Logger.getLogger(Scheduler.class.getName()).log(Level.INFO, toString());
@@ -167,11 +169,11 @@ public class Scheduler extends Thread {
 	}
 
 	/**
-	 * It appends data in to csv table.
+	 * It appends/updates data in to csv table.
 	 * 
 	 * complexity: T(n)= Ω( c + (n*m - 3n)) ~ T(n) = O(n^2)
 	 */
-	private void appendData() {
+	private void parseData(boolean isUpdateMode) {
 		try {
 			File lastUpdatedFile = readCsvFile();
 			SimpleDateFormat sdfConverter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -444,7 +446,20 @@ public class Scheduler extends Thread {
 											csvToFill.getColonnaN() + ";" + row.get(i).trim().replaceAll(regex, ""));
 								i++;
 							}
-							boolean done = HibernateUtil.save(csvToFill);
+							boolean done = false;
+							if(!isUpdateMode){
+								//Append
+								done = HibernateUtil.save(csvToFill);
+							}else{
+								//Update
+								Csv existsRow = HibernateUtil.readCsvByIdPolarion(csvToFill.getIdPolarion());
+								if(existsRow == null){
+									done = HibernateUtil.save(csvToFill);
+								}else{
+									csvToFill.setId(existsRow.getId());
+									done = HibernateUtil.update(Csv.class, csvToFill);
+								}
+							}
 							if (done) {
 								csvToFill = new Csv();
 								currentState = new basic.State();
@@ -473,7 +488,7 @@ public class Scheduler extends Thread {
 	 */
 	private void arrangeData() {
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"), literalSdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
 			List<Csv> list = HibernateUtil.readAllCsv();
 			for (Csv csv : list) {
 				// Se non esiste il progetto lo creo
@@ -494,7 +509,7 @@ public class Scheduler extends Thread {
 					 * dataCreazioneReleaseDiProgetto;
 					 * dataUltimoAggiornamentoReleaseDP
 					 */
-					String[] bElements = csv.getColonnaB().split(";");
+					String[] bElements = csv.getColonnaB().split(Pattern.quote(";"));
 					releaseDiProgetto = HibernateUtil.readRelease(bElements[0].trim());
 					boolean toUpdate = false, toSave = false;
 
@@ -573,10 +588,18 @@ public class Scheduler extends Thread {
 					Pattern pattern = Pattern.compile(regex);
 					Matcher matcher = pattern.matcher(csv.getColonnaC());
 					while (matcher.find()) {
-						String[] history = matcher.group().split("^");
-						Status status = HibernateUtil.readStatus(history[0].trim());
-						Date dataUpdate = sdf.parse(history[1]);
-						User user = HibernateUtil.readUser(history[2].trim());
+						String[] history = matcher.group(1).split(Pattern.quote("^"));
+
+						Status status = null;
+						if (history.length > 0)
+							status = HibernateUtil.readStatus(history[0].trim());
+						Date dataUpdate = null;
+						if (history.length > 1)
+							dataUpdate = sdf.parse(history[1]);
+						User user = null;
+						if (history.length > 2)
+							user = HibernateUtil.readUser(history[2].trim());
+
 						ReleaseHistory rHistory = HibernateUtil.readReleaseHistory(releaseDiProgetto, status,
 								dataUpdate, user);
 						if (rHistory == null) {
@@ -649,11 +672,11 @@ public class Scheduler extends Thread {
 						csv.setColonnaJ(csv.getColonnaJ().substring(1, csv.getColonnaJ().length() - 1));
 						hasLinkedItem = true;
 					}
-					String[] elements = csv.getColonnaJ().split("|");
+					String[] elements = csv.getColonnaJ().split(Pattern.quote("|"));
 					if (hasLinkedItem) {
 						LinkedItemId lIId = new LinkedItemId();
-						lIId.setIdPolarionPadre(elements[1]);
-						lIId.setIdPolarionFiglio(releaseDiProgetto.getIdPolarion());
+						lIId.setIdPolarionPadre(releaseDiProgetto.getIdPolarion());
+						lIId.setIdPolarionFiglio(elements[1]);
 						LinkedItem li = HibernateUtil.readLinkedItem(lIId);
 						if (li == null) {
 							li = new LinkedItem();
@@ -661,18 +684,31 @@ public class Scheduler extends Thread {
 							HibernateUtil.save(li);
 						}
 					}
-					releaseIT = HibernateUtil.readReleaseIT(elements[1]);
+					releaseIT = HibernateUtil.readReleaseIT(elements[1].trim());
 					boolean toSave = false;
 					if (releaseIT == null || !releaseIT.getTitolo().equals(elements[2].trim())) {
 						if (releaseIT == null) {
 							releaseIT = new ReleaseIt();
+							releaseIT.setIdPolarion(elements[1].trim());
 							toSave = true;
 						}
 						releaseIT.setTitolo(elements[2].trim());
-						if (elements[3] != null && elements[3].trim().length() > 0)
-							releaseIT.setDataInizio(sdf.parse(elements[3].trim()));
-						if (elements[4] != null && elements[4].trim().length() > 0)
-							releaseIT.setDataFine(sdf.parse(elements[4].trim()));
+						if (elements[3] != null && elements[3].trim().length() > 0){
+							Date d = null;
+							try{ 
+								d = sdf.parse(elements[3].trim());
+							}catch(ParseException pe){
+								d = literalSdf.parse(elements[3].trim());
+							}
+							releaseIT.setDataInizio(d);
+						}
+						if (elements[4] != null && elements[4].trim().length() > 0){
+							try{
+								releaseIT.setDataFine(sdf.parse(elements[4].trim()));
+							}catch(ParseException pe){
+								releaseIT.setDataFine(literalSdf.parse(elements[4].trim()));
+							}
+						}
 						if (toSave)
 							HibernateUtil.save(releaseIT);
 						else
@@ -684,12 +720,16 @@ public class Scheduler extends Thread {
 						Matcher matcher = pattern.matcher(elements[5].trim());
 						boolean isFirstRow = true;
 						// formato sdf per Thu Feb 18 00:00:00 CET 2016
-						SimpleDateFormat literalSdf = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
 						while (matcher.find()) {
-							String[] history = matcher.group().split("^");
+							String[] history = matcher.group(1).split(Pattern.quote("^"));
 							Status status = HibernateUtil.readStatus(history[0].trim());
-
-							Date dataUpdate = literalSdf.parse(history[1]);
+							
+							Date dataUpdate = null;
+							try{
+								dataUpdate = sdf.parse(history[1]);
+							}catch(ParseException pe){
+								dataUpdate = literalSdf.parse(history[1]);
+							}
 
 							if (isFirstRow && releaseIT.getDataCreazione() == null) {
 								releaseIT.setDataCreazione(dataUpdate);
@@ -700,7 +740,7 @@ public class Scheduler extends Thread {
 							ReleaseitHistory rItHistory = null;
 							if (history.length > 2) {
 								User user = HibernateUtil.readUser(history[2].trim());
-								rItHistory = HibernateUtil.readReleaseItHistory(releaseDiProgetto, status, dataUpdate,
+								rItHistory = HibernateUtil.readReleaseItHistory(releaseIT, status, dataUpdate,
 										user);
 							}
 							if (rItHistory == null) {
