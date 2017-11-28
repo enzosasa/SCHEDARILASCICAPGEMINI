@@ -1,6 +1,7 @@
 package entities;
 // Generated Nov 28, 2017 11:11:12 AM by Hibernate Tools 5.1.0.Alpha1
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -274,5 +275,19 @@ public class Csv implements java.io.Serializable {
 	public void setColonnaN(String colonnaN) {
 		this.colonnaN = colonnaN;
 	}
-
+	
+	@Override
+	public String toString() {
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		return "current CSV: [id: " + id + ", fileName: " + fileName + ", fileDate: "
+				+ (fileDate != null ? sdf.format(fileDate) + " or " + fileDate.getTime() : null)
+				+ ", inizioEstrazione: " + (inizioEstrazione != null ? sdf.format(inizioEstrazione) : null)
+				+ ", fineEstrazione: " + (inizioEstrazione != null ? sdf.format(inizioEstrazione) : null)
+				+ ",\n idPolarion: " + idPolarion + ", progettoPolarion: " + progettoPolarion + ", repository: "
+				+ repository + ",\n ColonnaA: " + colonnaA + ",\n ColonnaB: " + colonnaB + ",\n ColonnaC: " + colonnaC
+				+ ",\n ColonnaD: " + colonnaD + ",\n ColonnaE: " + colonnaE + ",\n ColonnaF: " + colonnaF + ",\n ColonnaG: "
+				+ colonnaG + ", ColonnaH: " + colonnaH + ", ColonnaI: " + colonnaI + ", ColonnaJ: " + colonnaJ
+				+ ",\n ColonnaK: " + colonnaK + ",\n ColonnaL: " + colonnaL + ",\n ColonnaM: " + colonnaM + ",\n ColonnaN: "
+				+ colonnaN + "]";
+	}
 }
